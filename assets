@@ -1,0 +1,187 @@
+product_detail.html
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toko Makanan Genta </title>
+    <style>
+        body {
+          font-family: Arial, sans-serif;
+          background-color: #f5f5f5;
+          margin: 0;
+          padding: 20px;
+        }
+        .header {
+          background: #3498db;
+          color: white;
+          padding: 10px;
+          text-align: center;
+        }
+        .controls {
+          display: flex;
+          justify-content: space-between;
+          flex-wrap: wrap;
+          margin: 20px 0;
+        }
+        .controls input, .controls select {
+          padding: 8px;
+          font-size: 16px;
+          margin-bottom: 10px;
+        }
+        .product-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+          gap: 20px;
+        }
+        .product {
+          background: white;
+          border-radius: 8px;
+          padding: 10px;
+          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .product img {
+          max-width: 100%;
+          border-radius: 8px;
+          height: 150px;
+          object-fit: cover;
+        }
+        .product h3 {
+          font-size: 16px;
+          margin: 10px 0;
+        }
+        .product p {
+          color: #3498db;
+          font-weight: bold;
+        }
+        .add-to-cart {
+          background: #3498db;
+          color: white;
+          border: none;
+          padding: 8px;
+          width: 100%;
+          border-radius: 5px;
+          cursor: pointer;
+          transition: transform 0.3s;
+        }
+        .add-to-cart:hover {
+          transform: scale(1.05);
+        }
+        .cart {
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          background: white;
+          border: 1px solid #ccc;
+          padding: 10px;
+          border-radius: 8px;
+          width: 250px;
+          max-height: 300px;
+          overflow-y: auto;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        .cart h4 {
+          margin-top: 0;
+        }
+        .cart-total {
+          margin-top: 10px;
+          font-weight: bold;
+          color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <h1>Toko Makanan Genta</h1>
+</div>
+
+<div class="controls">
+    <input type="text" id="searchInput" placeholder="Cari produk..." oninput="filterProducts()">
+    <select id="priceFilter" onchange="filterProducts()">
+        <option value="all">Semua Harga</option>
+        <option value="low">Di bawah Rp 10.000</option>
+        <option value="high">Rp 10.000 ke atas</option>
+    </select>
+</div>
+
+<div class="product-grid" id="productGrid">
+    <!-- Produk akan dirender dengan JavaScript -->
+</div>
+
+<div class="cart" id="cart">
+    <h4>Keranjang</h4>
+    <ul id="cartItems"></ul>
+    <div id="cartTotal" class="cart-total">Total: Rp 0</div>
+</div>
+
+<script>
+    const products = [
+      { id: 1, name: "Mie Instan Goreng + Ayam Suwir ", price: 35000, image: "https://media.istockphoto.com/id/2182042462/id/foto/bakmi-mi-goreng-atau-mie-goreng-dengan-daging-ayam-dan-sayuran-menu-makanan-indonesia.jpg?s=612x612&w=0&k=20&c=qJwG_KVbU5Wmm_33PnQQOoNtWxc5e9T1ch0iYQ41DZ0=" },
+      { id: 2, name: "Keripik Kentang Goreng + Saus Tomat ", price: 28000, image: "https://media.istockphoto.com/id/466762504/id/foto/sepiring-kentang-goreng-dan-saus-tomat-prancis-panggang-yang-tidak-sehat.jpg?s=612x612&w=0&k=20&c=Z5OnoGQ54jeOlQy7OmK4vBlnCLouCrJjI4phx8OPDBM=" },
+      { id: 3, name: "Cokelat Batangan", price: 99000, image: "https://plus.unsplash.com/premium_photo-1671059792129-8fb1cff208f1?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NTN8fGNva2xhdCUyMGJhdGFuZ3xlbnwwfHwwfHx8MA%3D%3D" },
+      { id: 4, name: "Biskuit Keju", price: 20000, image: "https://media.istockphoto.com/id/2194712928/photo/crispy-and-melt-in-your-mouth-sagu-keju-cookies-made-from-sago-flour-and-topped-with-cheese.webp?a=1&b=1&s=612x612&w=0&k=20&c=8kfFpyK5U7hfH7kiNuplsJdv2Ds3DouddyVnZuaYVMA=" },
+      { id: 5, name: "Minuman Soda", price: 8990, image: "https://media.istockphoto.com/id/2162110995/id/foto/soft-drinks.jpg?s=612x612&w=0&k=20&c=H_h2jHhm9SoEV8MOoX64eVGgbTC0l3Kb2kU_5b-inDc=" },
+      { id: 6, name: "Kopi Hitam + Keju Bolu", price: 180000, image: "https://media.istockphoto.com/id/2195607219/id/foto/coffee-and-cheesecake.jpg?s=612x612&w=0&k=20&c=P82Hx4fjqzBONZwzp5Rvi7uuw1N_Et4NgrPclzASE5s=" },
+      { id: 7, name: "Es Teh Manis + Jeruk Lemon", price: 45000, image: "https://media.istockphoto.com/id/471350903/id/foto/teh-es-boston.jpg?s=612x612&w=0&k=20&c=8iH7k5XqdNCwqU4-5rZs64wYvtECU0TYAdCV0Fk-thc=" },
+      { id: 8, name: "Roti Bakar Komplit", price: 97000, image: "https://media.istockphoto.com/id/2164772590/id/foto/snack-food.jpg?s=612x612&w=0&k=20&c=VcWoRjujV7XGUyH3Ur7HA22Nr1nP-J_IDiNqCHtWY9k=" },
+      { id: 9, name: "Donat Cokelat", price: 100000, image: "https://media.istockphoto.com/id/686623972/id/foto/menyiapkan-donat-buatan-sendiri.jpg?s=612x612&w=0&k=20&c=fFtBoNKCN2DuGGRSreo1NeU1_J__wOdrISaRVKUJfC8=" },
+      { id: 10, name: "Sate Ayam Komplit", price: 55000, image: "https://media.istockphoto.com/id/1898894403/id/foto/sate-ayam-atau-sate-ayam-makanan-terkenal-asia.jpg?s=612x612&w=0&k=20&c=wD3ugwNF4IhXgT07ktyzd5O6B-ZJnzwg_L8zhNNX4e0=" },
+      { id: 11, name: "Burger Komplit + Kentang", price: 200000, image: "https://media.istockphoto.com/id/2157436773/id/foto/cafeteria-double-beef-burger-gourmet.jpg?s=612x612&w=0&k=20&c=nHBRCp6rLu8Ag3pKMmgHmIqujU8BlUMZOMbh6OSMrrk=" },
+      { id: 12, name: "Nasi Goreng Hotel Komplit", price: 250000, image: "https://media.istockphoto.com/id/2160386467/id/foto/foto-nasi-goreng-kepiting-di-atas-piring-di-sebuah-restoran-seafood-saat-berwisata-di-phuket.jpg?s=612x612&w=0&k=20&c=7eFwNrxhh7ggPxJt8EOnTw6dEcV3YmlWQJXnEdIhLlw=" },
+    ];
+
+    const cart = [];
+
+    function renderProducts() {
+      const container = document.getElementById("productGrid");
+      container.innerHTML = "";
+      const search = document.getElementById("searchInput").value.toLowerCase();
+      const filter = document.getElementById("priceFilter").value;
+      const filtered = products.filter(p => {
+        const matchSearch = p.name.toLowerCase().includes(search);
+        const matchPrice = filter === "all" || (filter === "low" && p.price < 10000) || (filter === "high" && p.price >= 10000);
+        return matchSearch && matchPrice;
+      });
+
+      filtered.forEach(p => {
+        const product = document.createElement("div");
+        product.className = "product";
+        product.innerHTML = `
+          <img src="${p.image}" alt="${p.name}">
+          <h3>${p.name}</h3>
+          <p>Rp ${p.price.toLocaleString()}</p>
+          <button class="add-to-cart" onclick="addToCart(${p.id})">Tambah ke Keranjang</button>
+        `;
+        container.appendChild(product);
+      });
+    }
+
+    function filterProducts() {
+      renderProducts();
+    }
+
+    function addToCart(id) {
+      const product = products.find(p => p.id === id);
+      cart.push(product);
+      updateCart();
+    }
+
+    function updateCart() {
+      const cartItems = document.getElementById("cartItems");
+      const cartTotal = document.getElementById("cartTotal");
+      cartItems.innerHTML = "";
+      let total = 0;
+      cart.forEach(item => {
+        const li = document.createElement("li");
+        li.textContent = `${item.name} - Rp ${item.price.toLocaleString()}`;
+        cartItems.appendChild(li);
+        total += item.price;
+      });
+      cartTotal.textContent = `Total: Rp ${total.toLocaleString()}`;
+    }
+
+    window.onload = renderProducts;
+</script>
+</body>
+</html>
